@@ -93,7 +93,7 @@ func (p *PipelineSelector) retryHighPriorityPipelines(ctx context.Context, retry
 	defer ticker.Stop()
 
 	for i := 0; i < len(p.pipelineRetries); i++ {
-		if i > p.loadStable() {
+		if i >= p.loadStable() {
 			return
 		}
 		if p.maxRetriesUsed(i) {
