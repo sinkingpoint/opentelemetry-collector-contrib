@@ -6,6 +6,7 @@ package failoverconnector // import "github.com/open-telemetry/opentelemetry-col
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/connector"
@@ -45,6 +46,7 @@ func (f *logsFailover) ConsumeLogs(ctx context.Context, ld plog.Logs) error {
 func (f *logsFailover) FailoverLogs(ctx context.Context, ld plog.Logs) error {
 	for tc, ch, ok := f.failover.getCurrentConsumer(); ok; tc, ch, ok = f.failover.getCurrentConsumer() {
 		err := tc.ConsumeLogs(ctx, ld)
+		fmt.Println("logsFailover: FailoverLogs: err: ", err)
 		if err != nil {
 			ch <- false
 			continue

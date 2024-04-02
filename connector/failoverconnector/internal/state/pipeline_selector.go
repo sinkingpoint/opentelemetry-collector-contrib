@@ -5,6 +5,7 @@ package state // import "github.com/open-telemetry/opentelemetry-collector-contr
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"sync"
 	"sync/atomic"
@@ -70,9 +71,12 @@ func (p *PipelineSelector) handleRetry(parentCtx context.Context) context.Cancel
 // UpdatePipelineIndex is the main function that updates the pipeline indexes due to an error
 func (p *PipelineSelector) updatePipelineIndex(idx int) {
 	if p.indexIsStable(idx) {
+		fmt.Println("PipelineSelector: updatePipelineIndex: indexIsStable", idx)
 		p.setToNextPriorityPipeline(idx)
 		return
 	}
+
+	fmt.Println("PipelineSelector: updatePipelineIndex: !indexIsStable", idx)
 	p.setToStableIndex(idx)
 }
 
@@ -94,16 +98,21 @@ func (p *PipelineSelector) retryHighPriorityPipelines(ctx context.Context, retry
 
 	for i := 0; i < len(p.pipelineRetries); i++ {
 		if i > p.loadStable() {
+			fmt.Println("PipelineSelector: retryHighPriorityPipelines: i > p.loadStable()", i, p.loadStable())
 			return
 		}
 		if p.maxRetriesUsed(i) {
+			fmt.Println("PipelineSelector: retryHighPriorityPipelines: maxRetriesUsed", i, p.loadRetryCount(i))
 			continue
 		}
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			p.currentIndex.Store(int32(i))
+			if i < p.loadStable() {
+				fmt.Println("PipelineSelector: retryHighPriorityPipelines: i < p.loadStable()", i, p.loadStable())
+				p.currentIndex.Store(int32(i))
+			}
 		}
 	}
 }
@@ -124,6 +133,7 @@ func (p *PipelineSelector) exceededMaxRetries(idx int) bool {
 
 // SetToStableIndex returns the CurrentIndex to the known Stable Index
 func (p *PipelineSelector) setToStableIndex(idx int) {
+	fmt.Println("PipelineSelector: setToStableIndex", idx)
 	p.incrementRetryCount(idx)
 	p.currentIndex.Store(p.stableIndex.Load())
 }
@@ -135,6 +145,7 @@ func (p *PipelineSelector) maxRetriesUsed(idx int) bool {
 
 // SetNewStableIndex Update stableIndex to the passed stable index
 func (p *PipelineSelector) setNewStableIndex(idx int) {
+	fmt.Println("PipelineSelector: setNewStableIndex", idx)
 	p.resetRetryCount(idx)
 	p.stableIndex.Store(int32(idx))
 }

@@ -5,6 +5,7 @@ package failoverconnector // import "github.com/open-telemetry/opentelemetry-col
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"go.opentelemetry.io/collector/component"
@@ -52,6 +53,7 @@ func newFailoverRouter[C any](provider consumerProvider[C], cfg *Config) *failov
 func (f *failoverRouter[C]) getCurrentConsumer() (C, chan bool, bool) {
 	var nilConsumer C
 	pl, ch := f.pS.SelectedPipeline()
+	fmt.Println("Current Pipeline: ", pl)
 	if pl >= len(f.cfg.PipelinePriority) {
 		return nilConsumer, nil, false
 	}
