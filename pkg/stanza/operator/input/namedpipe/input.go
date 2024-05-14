@@ -39,36 +39,48 @@ func (i *Input) Start(_ operator.Persister) error {
 		return fmt.Errorf("failed to stat named pipe: %w", err)
 	}
 
+	i.Info("sucessfully statted named pipe")
+
 	if !os.IsNotExist(err) && stat.Mode()&os.ModeNamedPipe == 0 {
 		return fmt.Errorf("path %s is not a named pipe", i.path)
 	}
 
+	i.Info("existing file is not a named pipe")
+
 	if os.IsNotExist(err) {
+		i.Info("creating pipe")
 		if fifoErr := unix.Mkfifo(i.path, i.permissions); fifoErr != nil {
 			return fmt.Errorf("failed to create named pipe: %w", fifoErr)
 		}
+		i.Info("created pipe")
 	}
 
+	i.Info("chmodding pipe")
 	// chmod the named pipe because mkfifo respects the umask which may result
 	// in a named pipe with incorrect permissions.
 	if chmodErr := os.Chmod(i.path, os.FileMode(i.permissions)); chmodErr != nil {
 		return fmt.Errorf("failed to chmod named pipe: %w", chmodErr)
 	}
 
+	i.Info("chmodded pipe")
+
 	watcher, err := NewWatcher(i.path)
 	if err != nil {
 		return fmt.Errorf("failed to create watcher: %w", err)
 	}
+	i.Info("created watcher")
 
 	pipe, err := os.OpenFile(i.path, os.O_RDWR, os.ModeNamedPipe)
 	if err != nil {
 		return fmt.Errorf("failed to open named pipe: %w", err)
 	}
+	i.Info("opened pipe")
 
 	i.pipe = pipe
 
 	ctx, cancel := context.WithCancel(context.Background())
 	i.cancel = cancel
+	i.Info("started")
 
 	i.wg.Add(2)
 	go func() {
