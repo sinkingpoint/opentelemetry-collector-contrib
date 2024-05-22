@@ -423,6 +423,7 @@ Available Converters:
 - [UnixNano](#unixnano)
 - [UnixSeconds](#unixseconds)
 - [UUID](#UUID)
+- [Year](#year)
 
 ### Base64Decode
 
@@ -1327,6 +1328,20 @@ Examples:
 `UUID()`
 
 The `UUID` function generates a v4 uuid string.
+
+### Year
+
+`Year(value)`
+
+The `Year` Converter returns the year component from the specified time using the Go stdlib [`time.Year` function](https://pkg.go.dev/time#Time.Year).
+
+`value` is a `time.Time`. If `value` is another type, an error is returned.
+
+The returned type is `int64`.
+
+Examples:
+
+- `Year(Now())`
 
 ## Function syntax
 
